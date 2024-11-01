@@ -1,15 +1,6 @@
+// Esteban Oman Mendoza, Fall 2020 Utah Valley University
 
-// `ifndef MAZE_H
-// `define MAZE_H
-
-
-
-
-
-
-
-module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
-    // clk, rst, user_input, seg0, seg1, seg2, seg3, seg4, seg5    
+module tt_um_Esteban_Oman_Mendoza_maze_2024_top(  
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -21,29 +12,29 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
 );
 
 
-    wire rst;
-    wire [2:0] user_input;
-    reg [7:0] seg0, seg1, seg2, seg3, seg4, seg5;
-    reg [7:0] state, next_state;
-    reg [3:0] room_walls;
-    reg [3:0] shifted_room_walls;
-    reg [40:0] counter;
-    reg Hertz_4; 
-    reg Hertz_60;
-    reg blink_toggle;
-    reg [2:0] display_sel;
-    reg [4:0] seg_enable;
-    reg [7:0] segments;
+    wire rst; // reset signal on low
+    wire [2:0] user_input; // 3 bit user input user_input[0] = Move forward on low user_input[1] = LSB for direction select, user_input[2]  = MSB for direction select.
+    reg [7:0] seg0, seg1, seg2, seg3, seg4, seg5; //mapped to uio[0]: "state LSB"  uio[1]: "state MSB"  uio[2]: "Direction LSB"  uio[3]: "Direction MSB"  uio[4]: "Top half of segment used for wall representation. 0-0, 1-1,...,5-5.
+    reg [7:0] state, next_state; // represent room numbers
+    reg [3:0] room_walls; // represent the room as seen from above (birds eye view)
+    reg [3:0] shifted_room_walls; // turns the room walls to represent the direction choosen. 
+    reg [40:0] counter; // used to divide the clock
+    reg Hertz_4;  // FIXME not 4 Hz clock to capture user input
+    reg Hertz_60; // FIXME not 60 Hz clock to multiplex the displays from 5 bits
+    reg blink_toggle; // toggle all displays when in win state
+    reg [2:0] display_sel; // counter to cycle between output states
+    reg [4:0] seg_enable; // drives output pin low to turn on pnp transistor and allow current to flow into the "on" displays for that current display state (low = on)
+    reg [7:0] segments; // 7 segment outputs, common to all 5 segment displays, must tie pins together1,2,4,5,6,7,9,10 
 
-    assign uio_oe = 8'b11111111;
-    assign uo_out[7:0] = segments;
-    assign uio_out[7:0] = {3'b111, seg_enable};
-    assign user_input = ui_in[2:0];
-    assign rst = rst_n;
+    assign uio_oe = 8'b11111111; // all uio are set as outputs
+    assign uo_out[7:0] = segments; // map active wall segemens to output
+    assign uio_out[7:0] = {3'b111, seg_enable}; // map segments to output pins, low = on
+    assign user_input = ui_in[2:0]; // user input
+    assign rst = rst_n; // map reset
 
 
     
-
+// parameters to make code more readable
     parameter
         A = 4'b1000,
         B = 4'b0100,
@@ -194,9 +185,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
         //  
         //
 
-
-    
-
+// output of room walls mapped to seven segment display
   function [7:0] wall_decoder;
         input [3:0] map;
             case (map)
@@ -310,7 +299,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
                     wall_decoder = 8'b11111111; // all off
             endcase
         endfunction
-    
+// seven segment decoder for room and direction outputs
   function [7:0] segment_decoder;
     input [7:0] shape_code;
             begin
@@ -592,7 +581,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
                 end
         end
 
-    
+    // update counter on the system clock
     always @(posedge clk or negedge rst) 
         begin
             if (!rst)
@@ -606,7 +595,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
         end
 
 
-    always @(*) // segment outputs right to left (State, Dir, map walls) 
+    always @(*) // segment outputs right to left
         begin
             if(!rst)
                 begin
@@ -618,7 +607,6 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
                 end
             else if (state == state_36) 
                 begin
-                    // Control the blinking
                     if (blink_toggle) 
                         begin
                             seg0 = segment_decoder(10); // All segments on
@@ -629,7 +617,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
                         end 
                     else 
                         begin
-                            seg0 = segment_decoder(blank_8);
+                            seg0 = segment_decoder(blank_8); // all segments off
                             seg1 = segment_decoder(blank_8);
                             seg2 = segment_decoder(blank_8);
                             seg3 = segment_decoder(blank_8);
@@ -638,18 +626,18 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
                 end
             else
                 begin
-                    seg0 = segment_decoder (state%10); // ones place
-                    seg1 = segment_decoder (state/10); // tens place
-                  seg2 = segment_decoder({7'b0000000, user_input[1:1]}); 
-                  seg3 = segment_decoder({7'b0000000, user_input[2:2]});
-                    seg4 = wall_decoder(shifted_room_walls);
+                    seg0 = segment_decoder (state%10); // state ones place
+                    seg1 = segment_decoder (state/10); // state tens place
+                    seg2 = segment_decoder({7'b0000000, user_input[1:1]}); // dir LSB
+                    seg3 = segment_decoder({7'b0000000, user_input[2:2]}); // dir MSB
+                    seg4 = wall_decoder(shifted_room_walls); // birds eye view of walls that surround you
                 end
         end
-  always @(posedge Hertz_60 or negedge rst)
+  always @(posedge Hertz_60 or negedge rst) //FIXME not actually 60Hz
             if(!rst) display_sel <= 0;
             else display_sel <= display_sel + 1;
 
-    always @(*) begin
+    always @(*) begin // select which segment to turn on depending on the counter (display_sel) 
         seg_enable = 5'b11111;
 
         case(display_sel)
@@ -688,7 +676,7 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
 
 
 
-    always @(*) // (Wall Generator) update room walls (facing north)
+    always @(*) // (Wall Generator) room walls layout when facing north
         case (state)
             state_0:
             room_walls = u_right;        
@@ -777,11 +765,6 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
             default:    shifted_room_walls = 4'bxxxx;
         endcase
 
-    
 
-
-        // Blink logic in the clock process
-    
 endmodule
 
-// `endif
