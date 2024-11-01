@@ -1,5 +1,6 @@
 // Esteban Oman Mendoza, Fall 2020 Utah Valley University
-
+`ifndef TT_UM_ESTEBAN_OMAN_MENDOZA_MAZE_2024_TOP_H
+`define TT_UM_ESTEBAN_OMAN_MENDOZA_MAZE_2024_TOP_H 
 module tt_um_Esteban_Oman_Mendoza_maze_2024_top(  
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -767,4 +768,6 @@ module tt_um_Esteban_Oman_Mendoza_maze_2024_top(
 
 
 endmodule
+
+`endif
 
