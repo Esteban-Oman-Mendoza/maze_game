@@ -45,11 +45,13 @@ module tb ();
       .clk    (clk),      // clock
       .rst_n  (rst_n)     // not reset
   );
-   // initial
-   // begin
-   // rst_n = 1;
-   // #50
-   // user_input = 3'b011;
-   // end
+   initial
+   begin
+   rst_n = 1;
+   #50
+   rst_n = 1;
+   #5
+   user_input = 3'b011;
+   end
 
 endmodule
