@@ -28,7 +28,7 @@ module tb ();
 `endif
 
   // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  tt_um_Esteban_Oman_Mendoza_maze_2024_top.v (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
@@ -45,5 +45,11 @@ module tb ();
       .clk    (clk),      // clock
       .rst_n  (rst_n)     // not reset
   );
+   initial
+   begin
+   rst_n = 1;
+   #50
+   user_input = 3'b011;
+   end
 
 endmodule
