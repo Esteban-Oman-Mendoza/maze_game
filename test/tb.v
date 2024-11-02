@@ -51,7 +51,7 @@ module tb ();
    #50
    rst_n = 1;
    #5
-   user_input = 3'b011;
+   ui_in = 3'b011;
    end
 
 endmodule
