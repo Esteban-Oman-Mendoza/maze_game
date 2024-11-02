@@ -28,8 +28,7 @@ module tb ();
 `endif
 
   // Replace tt_um_example with your module name:
-  tt_um_Esteban_Oman_Mendoza_maze_2024_top.v (
-
+   tt_um_Esteban_Oman_Mendoza_maze_2024_top.v ();
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
       .VPWR(VPWR),
